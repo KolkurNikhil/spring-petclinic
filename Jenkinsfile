@@ -8,25 +8,25 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
+        stage('Clean Workspace') {
             steps {
-                git 'https://github.com/KolkurNikhil/spring-petclinic'
+                cleanWs()
+            }
+        }
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/spring-projects/spring-petclinic.git'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn -B -DskipTests clean package'
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage('Run Application') {
+        stage('Deploy Application') {
             steps {
                 sh '''
                 pkill java || true
