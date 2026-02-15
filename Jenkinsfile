@@ -10,7 +10,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/YOUR-USERNAME/spring-petclinic.git'
+                git 'https://github.com/KolkurNikhil/spring-petclinic'
             }
         }
 
