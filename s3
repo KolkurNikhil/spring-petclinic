@@ -1,0 +1,118 @@
+# Jenkins → AWS S3 Static Website CI/CD Pipeline
+
+This project demonstrates a complete Continuous Integration and Continuous Deployment (CI/CD) pipeline using:
+
+- Jenkins
+- GitHub
+- AWS S3 Static Website Hosting
+- AWS CLI
+
+Whenever code is pushed to GitHub, Jenkins automatically builds and deploys the application to an S3 bucket and the website updates instantly.
+
+---
+
+## Architecture
+
+GitHub → Jenkins → Build → AWS S3 → Live Website
+
+---
+
+## Prerequisites
+
+- AWS Account
+- Jenkins Server (EC2 Amazon Linux)
+- IAM User with S3 permissions
+- AWS CLI installed on Jenkins
+- NodeJS installed (for frontend build apps)
+
+---
+
+## Step 1: Create S3 Static Website
+
+1. Create S3 bucket
+2. Disable Block Public Access
+3. Enable Static Website Hosting
+4. Set:
+   Index document: index.html
+
+### Bucket Policy
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/*"
+    }
+  ]
+}
+
+
+Step 2: Create IAM User
+
+Create user with programmatic access and attach:
+
+AmazonS3FullAccess
+
+Save Access Key & Secret Key.
+
+Step 3: Configure Jenkins
+
+Install Plugins:
+
+Git
+
+Pipeline
+
+AWS Credentials
+
+AWS Steps
+
+Add credentials in Jenkins:
+
+ID: aws-s3
+
+Step 4: Jenkins Pipeline
+pipeline {
+    agent any
+
+    environment {
+        AWS_DEFAULT_REGION = 'eu-central-1'
+        S3_BUCKET = 'YOUR_BUCKET_NAME'
+    }
+
+    stages {
+
+        stage('Clone') {
+            steps {
+                git 'REPO_URL'
+            }
+        }
+
+        stage('Install') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                withAWS(credentials: 'aws-s3') {
+                    sh '''
+                    aws s3 rm s3://$S3_BUCKET --recursive
+                    aws s3 sync dist/ s3://$S3_BUCKET
+                    '''
+                }
+            }
+        }
+    }
+}
